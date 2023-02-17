@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "697108389147",
+    "project_id": "passwordmanagerassignment",
+    "storage_bucket": "passwordmanagerassignment.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:697108389147:android:8c4b0144162c4a3d5247be",
+        "android_client_info": {
+          "package_name": "com.example.passwordmanagerassignment"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "697108389147-obfe3c9738o6hekga07mko26vlajj3kp.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.passwordmanagerassignment",
+            "certificate_hash": "836ce9ba3d26ad1561d5bb0b3df34cd24d2c1c9b"
+          }
+        },
+        {
+          "client_id": "697108389147-apqueheuh2el27c24jm6icfdbaa73s69.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC7MPZt2UwVwljkpWKDlxrXZIHksntj7o4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "697108389147-apqueheuh2el27c24jm6icfdbaa73s69.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
