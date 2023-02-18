@@ -8,12 +8,16 @@ import android.view.Menu
 import android.view.MenuItem
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
+import androidx.lifecycle.Observer
+import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.passwordmanagerassignment.R
+import com.example.passwordmanagerassignment.Resource
 import com.example.passwordmanagerassignment.adapter.ManagerAdapter
 import com.example.passwordmanagerassignment.databinding.ActivityManagerBinding
 import com.example.passwordmanagerassignment.databinding.AddPassAdBinding
 import com.example.passwordmanagerassignment.model.Password
+import com.example.passwordmanagerassignment.viewmodel.FirebaseViewModel
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.firestore.CollectionReference
@@ -31,7 +35,9 @@ class ManagerActivity : AppCompatActivity() {
 
     private val managerAdapter by lazy { ManagerAdapter() }
 
-    private lateinit var collectionRef: CollectionReference
+    private lateinit var firebaseViewModel: FirebaseViewModel
+
+//    private lateinit var collectionRef: CollectionReference
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -41,12 +47,14 @@ class ManagerActivity : AppCompatActivity() {
 
         auth = Firebase.auth
 
-        if (auth.currentUser != null){
-            collectionRef = Firebase.firestore
-                .collection("users")
-                .document(auth.currentUser?.uid!!)
-                .collection("passwords")
-        }
+        firebaseViewModel = ViewModelProvider(this)[FirebaseViewModel::class.java]
+
+//        if (auth.currentUser != null){
+//            collectionRef = Firebase.firestore
+//                .collection("users")
+//                .document(auth.currentUser?.uid!!)
+//                .collection("passwords")
+//        }
 
         getData()
         setRecyclerView()
@@ -70,20 +78,18 @@ class ManagerActivity : AppCompatActivity() {
     }
 
     private fun deleteData(password: Password) {
-        collectionRef
-            .whereEqualTo("website", password.website)
-            .whereEqualTo("password", password.password)
-            .get()
-            .addOnSuccessListener {
-                if (it.documents.isNotEmpty()){
-                    it.forEach{ document->
-                        collectionRef.document(document.id).delete()
-                            .addOnSuccessListener {
-                                Toast.makeText(this, "Item Deleted!", Toast.LENGTH_SHORT).show()
-                            }
-                    }
+        firebaseViewModel.deletePassword.observe(this, Observer { resource->
+            when(resource.status){
+                Resource.Status.LOADING ->{}
+                Resource.Status.ERROR -> {
+                    Toast.makeText(this, "Something went wrong!", Toast.LENGTH_SHORT).show()
+                }
+                Resource.Status.SUCCESS ->{
+                    Toast.makeText(this, "Deleted", Toast.LENGTH_SHORT).show()
                 }
             }
+        })
+        firebaseViewModel.deletePassword(password)
     }
 
     private fun setRecyclerView() {
@@ -93,15 +99,18 @@ class ManagerActivity : AppCompatActivity() {
     }
 
     private fun getData() {
-        collectionRef.addSnapshotListener { querySnapshot, error ->
-            error?.let {
-                Toast.makeText(this, "Something went wrong!", Toast.LENGTH_SHORT).show()
+        firebaseViewModel.getPasswordList.observe(this, Observer { resource->
+            when(resource.status){
+                Resource.Status.LOADING ->{}
+                Resource.Status.ERROR -> {
+                    Toast.makeText(this, "Something went wrong!", Toast.LENGTH_SHORT).show()
+                }
+                Resource.Status.SUCCESS ->{
+                    managerAdapter.differ.submitList(resource.data)
+                }
             }
-            querySnapshot?.let {
-                val passwordList = it.toObjects<Password>()
-                managerAdapter.differ.submitList(passwordList)
-            }
-        }
+        })
+        firebaseViewModel.getPasswords()
     }
 
     private fun updateData(password: Password) {
@@ -119,27 +128,18 @@ class ManagerActivity : AppCompatActivity() {
                     "website" to website,
                     "password" to webPass
                 )
-                collectionRef
-                    .whereEqualTo("website", password.website)
-                    .whereEqualTo("password", password.password)
-                    .get()
-                    .addOnSuccessListener { querySnapshot->
-                        if (querySnapshot.documents.isNotEmpty()){
-                            querySnapshot.documents.forEach { documentSnapshot ->
-                                collectionRef.document(documentSnapshot.id)
-                                    .set(passwordObj, SetOptions.merge())
-                                    .addOnSuccessListener {
-                                        Toast.makeText(this, "Successfully Updated!", Toast.LENGTH_SHORT).show()
-                                    }
-                                    .addOnFailureListener {
-                                        Toast.makeText(this, "Failed!", Toast.LENGTH_SHORT).show()
-                                    }
-                            }
+                firebaseViewModel.updatePassword.observe(this, Observer {resource->
+                    when(resource.status){
+                        Resource.Status.LOADING ->{}
+                        Resource.Status.ERROR -> {
+                            Toast.makeText(this, "Something went wrong!", Toast.LENGTH_SHORT).show()
+                        }
+                        Resource.Status.SUCCESS ->{
+                            Toast.makeText(this, "Updated", Toast.LENGTH_SHORT).show()
                         }
                     }
-                    .addOnFailureListener{
-                        Toast.makeText(this, "Failed!", Toast.LENGTH_SHORT).show()
-                    }
+                })
+                firebaseViewModel.updatePassword(password, passwordObj)
             }.create().show()
     }
 
@@ -157,13 +157,18 @@ class ManagerActivity : AppCompatActivity() {
                     "website" to website,
                     "password" to webPass
                 )
-                collectionRef.add(password)
-                    .addOnSuccessListener {
-                        Toast.makeText(this, "Successful!", Toast.LENGTH_SHORT).show()
+                firebaseViewModel.addPassword.observe(this, Observer { resource->
+                    when(resource.status){
+                        Resource.Status.LOADING ->{}
+                        Resource.Status.ERROR -> {
+                            Toast.makeText(this, "Something went wrong!", Toast.LENGTH_SHORT).show()
+                        }
+                        Resource.Status.SUCCESS ->{
+                            Toast.makeText(this, resource.data, Toast.LENGTH_SHORT).show()
+                        }
                     }
-                    .addOnFailureListener{
-                        Toast.makeText(this, "Failed!", Toast.LENGTH_SHORT).show()
-                    }
+                })
+                firebaseViewModel.addPassword(password)
             }.create().show()
     }
 
